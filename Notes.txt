@@ -1,0 +1,16 @@
+List Comprehension:
+	Constructing lists in a "natural easy way like mathematicians do"
+	Mathematical construction of a list
+
+	Examples:
+		S = [x**2 for x in range(10)]
+		V = [2**i for i in range(13))]
+		M = [x for x in S if x % 2 == 0]
+		
+	How this could be used to replace a for loop:
+		new_things = []
+		for ITEM in old_things:
+			if condition_based_on(ITEM):
+				new_things.append("something with " + ITEM)
+
+		new_things = ["something with " + ITEM for ITEM in old_things if condition_based_on(ITME)]
