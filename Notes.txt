@@ -13,4 +13,4 @@ List Comprehension:
 			if condition_based_on(ITEM):
 				new_things.append("something with " + ITEM)
 
-		new_things = ["something with " + ITEM for ITEM in old_things if condition_based_on(ITME)]
+		new_things = ["something with " + ITEM for ITEM in old_things if condition_based_on(ITEM)]
