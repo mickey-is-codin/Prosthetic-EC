@@ -17,22 +17,28 @@ SampleRate = 1000.0
 VoltsPerBit = 2.5/256
 
 #Define global variables
-Fs = 1000
+Fs = 1000                                         #Fs is the sample frequency likely in Hz. So we have 1kHz = the sampling frequency.
+                                                  #By the Nyquist theorem we know that the max frequency = 0.5 * Fs so max F = 500Hz for this system. Makes sense for EMG.
 FlexWindowSize = 0.25
-data = []
-displayData = [-2 for i in range(WindowSize)]
-flexing = False
+data = []                                         #The array that will hold all of the data that we are plotting using matplotlib. This is our y array.
+displayData = [-2 for i in range(WindowSize)]     #Data that only appears in the window size
+frame = 0
+newDataAvg = []
+newDataNum = []
+useData = []
+threshold = 0
+flexing = False                                   #Initialize this to false so that it does not assume that we are immediately flexing.
 
 # This reads from a socket.
-def data_listener():
+def data_listener():                              #Data listener definition: Anything that is able to "listen" for incoming data from a control. Usually an object outside of the program. In our instance the Control is the EMG signal coming from our arm.
   global data
   UDP_PORT = 9000
   sock = socket.socket(socket.AF_INET, # Internet
                       socket.SOCK_DGRAM) # UDP
   sock.bind((UDP_IP, UDP_PORT))
-  while True:
-    newdata, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
-    data.extend(list(newdata))
+  while True:                                     #While True is python's way of doing an update function. It evaluates over and over again at Python's frame rate.
+    newdata, addr = sock.recvfrom(1024) # buffer size is 1024 bytes.------
+    data.extend(list(newdata))                    #Adds all of the list of the new data to the original data array.
 
 #Handle command line arguments to get IP address
 if (len(sys.argv) == 2):
@@ -54,19 +60,19 @@ print("Listening for incoming messages...")
 print('Close Window to exit')
 
 #Start a new thread to listen for data over UDP
-thread = threading.Thread(target=data_listener)
-thread.daemon = True
+thread = threading.Thread(target=data_listener)     #Thread is potentially similar to a coroutine?
+thread.daemon = True                                #.daemon => A thread that's closed at shutdown. The entire python program exits when only daemon threads are left.
 thread.start()
 
 #Load and place image resources
-pyglet.resource.path = ['./resources']
-pyglet.resource.reindex()
-ForeArm_image = pyglet.resource.image("forearm.png")
-Bicep_image = pyglet.resource.image("Bicep.png")
-ForeArm_image.anchor_x = 7
-ForeArm_image.anchor_y = ForeArm_image.height-150
-Bicep_image.anchor_x = Bicep_image.width/2
-Bicep_image.anchor_y = Bicep_image.height/2
+pyglet.resource.path = ['./resources']              #Pyglet allows for GUI creation within a python program. This set of instructions will probably set images.
+pyglet.resource.reindex()                           #We set the path where the resources exist above (file holding the images) here we reindex it
+ForeArm_image = pyglet.resource.image("forearm.png")#Set an image in that path we set above and grab the appropriate name.
+Bicep_image = pyglet.resource.image("Bicep.png")    #Same as the function above but for the bicep
+ForeArm_image.anchor_x = 7                          #Set the x anchor to be 7
+ForeArm_image.anchor_y = ForeArm_image.height-150   #Set the y anchor to be the full height of the image - 150 px? 
+Bicep_image.anchor_x = Bicep_image.width/2          #Set the x anchor to be half of the image
+Bicep_image.anchor_y = Bicep_image.height/2         #Set the y anchor to be half of the height. The bicep is centered at the center of the screen.
 
 #Define the moving ForeArm class
 class ForeArm(pyglet.sprite.Sprite):
@@ -104,17 +110,54 @@ main_window.push_handlers(forearm.key_handler)
 
 
 def update(dt):
-  global displayData, data, flexing
+  global displayData, data, flexing, frame, threshold
 
   newData = list(data)
   data = []
   newDisplay = list(displayData[len(newData):len(displayData)] + newData)
   displayData = list(newDisplay)
 
-  #Put your flex algorithm code here!
-  #If flexing is detected, set the 'flexing' variable to True.
-  #Otherwise, set it to False.
-  flexing = True
+  recall = np.zeros(10)
+
+  #EVERY UPDATE WE'RE PASSED ALL OF THE FLEX INFORMATION THAT HAS OCCURRED BETWEEN UPDATES
+  #newData's first length is 530
+
+  #Mickey Code Start
+
+  if len(newData) > 0:
+    newDataAvg.append(np.mean(newData))
+  else:
+    newDataAvg.append(125.0)
+    
+  newDataNum.append(newDataAvg[frame] - 125.0)
+  useData.append(np.absolute(newDataNum[frame]))
+
+  if frame < 20:
+    print("Frame: ", frame, "\n" "newData: ", newData, "\n" "newDataAvg: " ,newDataAvg[frame], "\n" "newDataNum: ", newDataNum[frame], "\n" "useData: ", useData[frame], "\n")
+
+  lcv = 10
+
+  if frame >= 9:          #Populates recall array with 10 most recent terms for measurement
+    if frame == 10:
+      threshold = np.mean(useData) * 1.414213
+      print(useData)
+      print(threshold)
+
+    for i in range(0,len(recall)):
+      recall[i] = useData[frame - lcv]
+      lcv = lcv - 1
+
+    recallAverage = np.mean(recall)
+
+    if ((threshold > 0) & (recallAverage > threshold)):
+      flexing = True
+    else: 
+      flexing = False
+
+  frame = frame + 1
+
+  #Mickey Code End
+
   forearm.update(dt)
 
 @main_window.event
