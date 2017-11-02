@@ -23,12 +23,11 @@ FlexWindowSize = 0.25
 data = []                                         #The array that will hold all of the data that we are plotting using matplotlib. This is our y array.
 displayData = [-2 for i in range(WindowSize)]     #Data that only appears in the window size
 frame = 0
-newDataAvg = []
-newDataNum = []
-#useData = []
 threshold = 0
-mickeyWindow = np.zeros(100)
-squares = []
+mickeyWindow = np.zeros(400)
+squares = np.zeros(len(mickeyWindow))
+mickeyWindowList = []
+squaresList = []
 flexing = False                                   #Initialize this to false so that it does not assume that we are immediately flexing.
 
 # This reads from a socket.
@@ -122,72 +121,43 @@ def update(dt):
   #Look at newest whatever second of data. 
   #Display data is always the latest 5,000 data points or 5 seconds of data.
 
-  global displayData, data, flexing, frame, threshold
+  global displayData, data, flexing, frame, threshold, mickeyWindow
 
   newData = list(data)
   data = []
   newDisplay = list(displayData[len(newData):len(displayData)] + newData)
   displayData = list(newDisplay)
 
-  #recall = np.zeros(10)
-
   #EVERY UPDATE WE'RE PASSED ALL OF THE FLEX INFORMATION THAT HAS OCCURRED BETWEEN UPDATES
   #newData's first length is 530
 
   #Mickey Code Start
 
-  '''if len(newData) > 0:
-    newDataAvg.append(np.mean(newData))
-  else:
-    newDataAvg.append(128.0)
-    
-  newDataNum.append(newDataAvg[frame] - 128.0)
-  useData.append(np.absolute(newDataNum[frame]))
-
-  if frame < 20:
-    print("Frame: ", frame, "\n" "newData: ", newData, "\n" "newDataAvg: " ,newDataAvg[frame], "\n" "newDataNum: ", newDataNum[frame], "\n" "useData: ", useData[frame], "\n")'''
-
   #Oct 30th Code"
 
-  #Populate mickeyWindow -- Set this to be 100 most recent points on displayData array.
-  for i in range(0,len(mickeyWindow)):
-    mickeyWindow[i] = displayData[i]
+  #for i in range(0,len(mickeyWindow)): #Populate mickeyWindow -- Set this to be 100 most recent points on displayData array.
+    #mickeyWindow[i] = displayData[i + len(displayData) - len(mickeyWindow)] - 128.0
+    #squares[i] = mickeyWindow[i] ** 2
 
-  #Take squares of everything in mickeyWindow
-  for i in range(0,len(mickeyWindow)):
-    squares.append(mickeyWindow[i] ** 2)
+  #Turn for loop into 2 list comprehensions
 
-  #Calculate rms of whole mickeyWindow for most recent 100
-  rmsMickey = (sum(squares) / len(mickeyWindow)) ** 0.5
+  mickeyWindowList = [(displayData[i + len(displayData) - len(mickeyWindow)] - 128.0) for i in range(0,len(mickeyWindow))]
+  squaresList = [(mickeyWindowList[i])**2 for i in range(0,len(mickeyWindow))]
 
-  #lcv = 10
-
-  #Characterizing the noise floor as the first 10 frame data points. This is probably a horrible idea.
+  rmsMickey = (sum(squaresList) / float(len(mickeyWindowList))) ** 0.5   #Calculate rms of whole mickeyWindow for most recent 100
   
-  if frame >= 9:          #Populates recall array with 10 most recent terms for measurement
-    if frame == 10: #On the 10th frame you take the mean of the first 10 frames and set the threshold with it
-      threshold = rmsMickey
-
-      #Consistency: Instead of frames (len(x data points))
+  if frame >= 19:       
+    if frame == 20: #On the 10th frame you take the rms of my window and set it as the threshold
+      threshold = rmsMickey * 1.2 #1.2 times the RMS value of the most recent noise floor is our threshold.
+      #threshold = 6
+      print(threshold)
 
     #Trying to see if rms of most recent 100 goes above the rms set from the first 10 frames
-    if ((rmsMickey > threshold) && (threshold > 0)):
+
+    if (rmsMickey > threshold) & (threshold > 0): 
       flexing = True
     else:
-      flexing = False
-    #END RMS Calculations
-
-    '''for i in range(0,len(recall)): #Recall is a 10 element array that gets constantly updated to push out the last value.
-      recall[i] = useData[frame - lcv] #Would probably be smarter to use the window or display data vector instead of recall.
-      lcv = lcv - 1
-
-    recallAverage = np.mean(recall)
-
-    if ((threshold > 0) & (recallAverage > threshold)):
-      flexing = True
-    else: 
-      flexing = False'''
-
+      flexing = False     #END RMS Calculations
 
   frame = frame + 1
 

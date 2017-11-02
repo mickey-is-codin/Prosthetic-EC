@@ -1,1 +1,59 @@
 Auxiliary notes from Dan's lecture on acquiring EMG Data
+
+Grading:
+	Algorithm goes in the BMI code
+	Walk up to you, Chris and Dan walk up. Flex relax flex relax flex relax.
+	3 Cycles of flex/relax to see if it works.
+	Chris will mark bord with a soldering iron.
+	Put the code on a USB sitck and turn it in right away
+	See if we used list comprehension
+
+	List comprehension and for loops?
+
+	For loop can be converted into list comprehension
+
+Algorithms:
+	Hint on the actual code:
+	RMS values for data
+
+	Detection algorithm:
+		Analyzing a signal and want to detect an event within the signal.
+		Realtime for us
+		Usually there is noise that has to be filtered out.
+
+	Good Algorithm:
+		High sensitivity
+			How often am i detecting an event?
+			Flexing:
+				Always detecting so you never miss a flex
+				100% Sensitivity is worthless because of noise
+				Detecting positives
+		High specificity
+			How often do I not detect a non-event.
+			Never says you're flexing when you're actually not.
+			Avoid false negatives.
+			Detecting negatives
+
+		Response Time:
+			Realtime algorithm
+			You want to detect the event immediately to actuate based on an event.
+
+	How do we make a detection algorithm:
+		2 major "knobs" we'll be twisting
+			Threshold
+				Pick a threshold that we compare the outputs of the algorithm to to determine whether or not we are flexing.
+
+
+
+			Window
+				How many data points am I looking at to make a decision.
+				Should probably be fairly small so we don't get a non-responsive delayed algorithm.
+
+				*****Your delay is at least as long as your window.
+
+				Comparing a number we got out of the window to actuate > Threshold
+
+			Window kicks out data and we compare it to a threshold.
+
+	****if statement to remove wifi noise*****
+
