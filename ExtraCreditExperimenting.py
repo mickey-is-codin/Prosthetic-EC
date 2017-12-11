@@ -79,7 +79,7 @@ Bicep_image.anchor_y = Bicep_image.height/2         #Set the y anchor to be half
 class ForeArm(pyglet.sprite.Sprite):
   def __init__(self, *args, **kwargs):
     super(ForeArm,self).__init__(img=ForeArm_image,*args, **kwargs)	
-    self.rotate_speed = 150.0
+    self.rotate_speed = 100.0
     self.rotation_upper_limit = -10
     self.rotation_lower_limit = -100
     self.rotation = self.rotation_upper_limit
@@ -135,6 +135,12 @@ def update(dt):
 
   #Oct 30th Code"
 
+  #for i in range(0,len(mickeyWindow)): #Populate mickeyWindow -- Set this to be 100 most recent points on displayData array.
+    #mickeyWindow[i] = displayData[i + len(displayData) - len(mickeyWindow)] - 128.0
+    #squares[i] = mickeyWindow[i] ** 2
+
+  #Turn for loop into 2 list comprehensions
+
   mickeyWindowList = [(displayData[i + len(displayData) - len(mickeyWindow)] - 128.0) for i in range(0,len(mickeyWindow))]
   squaresList = [(mickeyWindowList[i])**2 for i in range(0,len(mickeyWindow))]
 
@@ -142,7 +148,8 @@ def update(dt):
   
   if frame >= 19:       
     if frame == 20: #On the 10th frame you take the rms of my window and set it as the threshold
-      threshold = rmsMickey * 1.4 #1.6 times the RMS value of the most recent noise floor is our threshold.
+      threshold = rmsMickey * 1.2 #1.2 times the RMS value of the most recent noise floor is our threshold.
+      #threshold = 6
       print(threshold)
 
     #Trying to see if rms of most recent 100 goes above the rms set from the first 10 frames
@@ -151,6 +158,8 @@ def update(dt):
       flexing = True
     else:
       flexing = False     #END RMS Calculations
+
+  #At this point we have the flexing algorithm working and we can start coding for an extra credit auxiliary device.
 
   frame = frame + 1
 

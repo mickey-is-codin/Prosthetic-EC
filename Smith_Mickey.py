@@ -142,7 +142,7 @@ def update(dt):
   
   if frame >= 19:       
     if frame == 20: #On the 10th frame you take the rms of my window and set it as the threshold
-      threshold = rmsMickey * 1.4 #1.6 times the RMS value of the most recent noise floor is our threshold.
+      threshold = rmsMickey * 1.6 #1.6 times the RMS value of the most recent noise floor is our threshold.
       print(threshold)
 
     #Trying to see if rms of most recent 100 goes above the rms set from the first 10 frames
